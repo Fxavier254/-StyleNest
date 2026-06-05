@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/black"
+    android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/adminProductImage"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:background="#1AFFFFFF"
+        android:scaleType="centerCrop" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="16dp"
+        android:layout_toRightOf="@id/adminProductImage"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/adminProductName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Half-Zip Tech Sweat"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/neon_lime"
+                android:paddingHorizontal="4dp"
+                android:paddingVertical="2dp"
+                android:text="MENS"
+                android:textColor="@color/black"
+                android:textSize="8sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/adminProductCategory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:text="HOODIES"
+                android:textColor="@color/text_grey"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/adminProductPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="KES 3,500"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/stockSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:thumbTint="@color/neon_lime"
+            app:trackTint="@color/text_grey" />
+
+        <TextView
+            android:id="@+id/stockStatusText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="IN STOCK"
+            android:textColor="@color/neon_lime"
+            android:textSize="8sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@id/adminProductImage"
+        android:layout_marginTop="16dp"
+        android:background="#1AFFFFFF" />
+
+</RelativeLayout>

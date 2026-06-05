@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <!-- Sophisticated Boutique Dress Silhouette -->
+    <path
+        android:pathData="M50,15 C42,15 38,20 38,30 L20,90 L80,90 L62,30 C62,20 58,15 50,15 Z"
+        android:fillColor="#F0F0F0" />
+    <path
+        android:pathData="M50,15 C42,15 38,20 38,30 L20,90 L80,90 L62,30 C62,20 58,15 50,15 Z"
+        android:strokeWidth="1"
+        android:strokeColor="#C5A059" />
+    <!-- Shading for depth -->
+    <path
+        android:pathData="M50,15 L50,90"
+        android:strokeWidth="0.5"
+        android:strokeColor="#DDDDDD" />
+    <!-- Waist/Belt Detail -->
+    <path
+        android:pathData="M35,48 H65"
+        android:strokeWidth="3"
+        android:strokeColor="#C5A059" />
+    <!-- Artistic folds -->
+    <path
+        android:pathData="M30,70 L45,60 M70,70 L55,60"
+        android:strokeWidth="0.5"
+        android:strokeColor="#D0D0D0" />
+</vector>

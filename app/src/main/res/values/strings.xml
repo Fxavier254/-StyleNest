@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">StyleNest</string>
+    <string name="size_s">S</string>
+    <string name="size_m">M</string>
+    <string name="size_l">L</string>
+    <string name="size_xl">XL</string>
+    <string name="size_xxl">XXL</string>
+    <string name="size_3xl">3XL</string>
+    <string name="size_38">38</string>
+    <string name="size_39">39</string>
+    <string name="size_40">40</string>
+    <string name="size_41">41</string>
+    <string name="size_42">42</string>
+    <string name="size_43">43</string>
+    <string name="size_44">44</string>
+    <string name="size_standard">Standard</string>
+    <string name="added_to_cart">%1$s (Size: %2$s, Color: %3$s) added to cart!</string>
+    <string name="product_count">%1$d PRODUCTS</string>
+</resources>
