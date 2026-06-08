@@ -91,6 +91,26 @@
             android:layout_marginBottom="24dp">
         </GridLayout>
 
+        <!-- NEW SHOES SECTION -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="TOP FOOTWEAR"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.1" />
+
+        <GridLayout
+            android:id="@+id/shoesGrid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:alignmentMode="alignMargins"
+            android:columnCount="2"
+            android:layout_marginBottom="24dp">
+        </GridLayout>
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

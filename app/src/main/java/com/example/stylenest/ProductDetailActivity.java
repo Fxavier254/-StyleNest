@@ -18,9 +18,14 @@ import java.util.List;
 
 public class ProductDetailActivity extends AppCompatActivity {
 
-    private String selectedSize = "M"; // Default selection
-    private String selectedColor = ""; // Selected color name
+    private String selectedSize = "M"; 
+    private String selectedColor = ""; 
     private ProductRepository.ProductItem product;
+    private ImageView imageIv;
+    private TextView stockTv;
+    private MaterialButton addToCart;
+    private MaterialButton buyNow;
+    private LinearLayout imageGalleryContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,10 +41,8 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
 
-        // Get product name from intent to look it up in repo
         String productName = getIntent().getStringExtra("product_name");
         
-        // Fetch the most up-to-date data from the central repository (which Admin toggles)
         List<ProductRepository.ProductItem> allItems = ProductRepository.getInstance().getAllProducts();
         for (ProductRepository.ProductItem item : allItems) {
             if (item.name.equals(productName)) {
@@ -55,45 +58,18 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         TextView nameTv = findViewById(R.id.detailProductName);
         TextView priceTv = findViewById(R.id.detailProductPrice);
-        ImageView imageIv = findViewById(R.id.detailProductImage);
-        TextView stockTv = findViewById(R.id.stockStatusDetail);
+        imageIv = findViewById(R.id.detailProductImage);
+        stockTv = findViewById(R.id.stockStatusDetail);
+        addToCart = findViewById(R.id.addToCartButton);
+        buyNow = findViewById(R.id.buyNowButton);
+        imageGalleryContainer = findViewById(R.id.imageGalleryContainer);
 
         nameTv.setText(product.name);
         priceTv.setText(product.price);
         
-        // Display stock status based on Repository (Admin Desk control)
-        if (stockTv != null) {
-            if (!product.inStock) {
-                stockTv.setVisibility(View.VISIBLE);
-                stockTv.setText("OUT OF STOCK");
-                stockTv.setTextColor(Color.RED);
-            } else {
-                stockTv.setVisibility(View.VISIBLE);
-                stockTv.setText("IN STOCK");
-                stockTv.setTextColor(Color.parseColor("#CCFF00"));
-            }
-        }
-
-        Glide.with(this)
-             .load(product.imageSource)
-             .placeholder(R.drawable.ic_clothing_placeholder)
-             .centerInside()
-             .into(imageIv);
-
+        setupImageGallery();
         setupSizeSelection(product.category);
         setupColorSelection();
-
-        MaterialButton addToCart = findViewById(R.id.addToCartButton);
-        MaterialButton buyNow = findViewById(R.id.buyNowButton);
-
-        // If marked out of stock by Admin, disable buttons
-        if (!product.inStock) {
-            addToCart.setEnabled(false);
-            addToCart.setAlpha(0.3f);
-            buyNow.setEnabled(false);
-            buyNow.setAlpha(0.3f);
-            buyNow.setText("UNAVAILABLE");
-        }
 
         addToCart.setOnClickListener(v -> {
             addItemToCart();
@@ -107,17 +83,78 @@ public class ProductDetailActivity extends AppCompatActivity {
         });
     }
 
+    private void setupImageGallery() {
+        if (imageGalleryContainer == null || product.allImages == null || product.allImages.size() <= 1) {
+            View scroll = findViewById(R.id.imageGalleryScroll);
+            if (scroll != null) scroll.setVisibility(View.GONE);
+            return;
+        }
+
+        imageGalleryContainer.removeAllViews();
+        float density = getResources().getDisplayMetrics().density;
+        int sizePx = (int) (60 * density);
+        int marginPx = (int) (8 * density);
+
+        for (Object imgObj : product.allImages) {
+            ImageView thumb = new ImageView(this);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(sizePx, sizePx);
+            lp.setMargins(0, 0, marginPx, 0);
+            thumb.setLayoutParams(lp);
+            thumb.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            thumb.setBackgroundColor(Color.parseColor("#1A1A1A"));
+            thumb.setPadding(2, 2, 2, 2);
+            
+            Glide.with(this).load(imgObj).into(thumb);
+            
+            thumb.setOnClickListener(v -> {
+                Glide.with(this).load(imgObj).placeholder(R.drawable.ic_clothing_placeholder).into(imageIv);
+                for (int i = 0; i < imageGalleryContainer.getChildCount(); i++) {
+                    imageGalleryContainer.getChildAt(i).setBackgroundColor(Color.TRANSPARENT);
+                }
+                v.setBackgroundColor(Color.parseColor("#CCFF00"));
+            });
+            
+            imageGalleryContainer.addView(thumb);
+        }
+    }
+
+    private void updateAvailability(boolean isAvailable) {
+        if (stockTv != null) {
+            stockTv.setVisibility(View.VISIBLE);
+            if (!isAvailable) {
+                stockTv.setText("OUT OF STOCK");
+                stockTv.setTextColor(Color.RED);
+                addToCart.setEnabled(false);
+                addToCart.setAlpha(0.3f);
+                buyNow.setEnabled(false);
+                buyNow.setAlpha(0.3f);
+                buyNow.setText("UNAVAILABLE");
+            } else {
+                stockTv.setText("IN STOCK");
+                stockTv.setTextColor(Color.parseColor("#CCFF00"));
+                addToCart.setEnabled(true);
+                addToCart.setAlpha(1.0f);
+                buyNow.setEnabled(true);
+                buyNow.setAlpha(1.0f);
+                buyNow.setText("BUY NOW");
+            }
+        }
+    }
+
     private void addItemToCart() {
-        CartManager.getInstance().addItem(product.name, product.price, selectedSize, selectedColor, product.imageSource, R.drawable.ic_clothing_placeholder);
+        Object currentImage = product.colorImageMap.get(selectedColor);
+        if (currentImage == null) currentImage = product.imageSource;
+        CartManager.getInstance().addItem(product.name, product.price, selectedSize, selectedColor, currentImage, R.drawable.ic_clothing_placeholder);
     }
 
     private void setupColorSelection() {
         LinearLayout colorContainer = findViewById(R.id.colorContainer);
-        colorContainer.removeAllViews(); // Clear existing layout placeholders
+        colorContainer.removeAllViews();
 
         if (product.colors == null || product.colors.length == 0) {
             findViewById(R.id.tvColorLabel).setVisibility(View.GONE);
             selectedColor = "Default";
+            updateAvailability(product.inStock);
             return;
         }
 
@@ -141,23 +178,29 @@ public class ProductDetailActivity extends AppCompatActivity {
             colorView.setBackground(shape);
             
             colorView.setOnClickListener(v -> {
-                // Deselect others
                 for (int j = 0; j < colorContainer.getChildCount(); j++) {
                     View cv = colorContainer.getChildAt(j);
                     cv.setScaleX(1.0f);
                     cv.setScaleY(1.0f);
                     ((GradientDrawable)cv.getBackground()).setStroke(2, Color.WHITE);
                 }
-                // Select current
                 v.setScaleX(1.25f);
                 v.setScaleY(1.25f);
                 ((GradientDrawable)v.getBackground()).setStroke(4, Color.parseColor("#CCFF00"));
                 selectedColor = colorName;
+
+                // Color-specific Image Swap
+                Object colorImage = product.colorImageMap.get(colorName);
+                if (colorImage != null) {
+                    Glide.with(this).load(colorImage).placeholder(R.drawable.ic_clothing_placeholder).into(imageIv);
+                }
+
+                // Color-specific Stock logic
+                Boolean colorStock = product.colorStockMap.get(colorName);
+                updateAvailability(colorStock != null ? (product.inStock && colorStock) : product.inStock);
             });
             
             colorContainer.addView(colorView);
-            
-            // Select first by default
             if (i == 0) colorView.performClick();
         }
     }

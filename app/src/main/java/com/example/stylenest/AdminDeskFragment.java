@@ -1,15 +1,23 @@
 package com.example.stylenest;
 
+import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -19,6 +27,7 @@ import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
+import java.util.ArrayList;
 import java.util.List;
 
 public class AdminDeskFragment extends Fragment {
@@ -26,6 +35,32 @@ public class AdminDeskFragment extends Fragment {
     private List<ProductRepository.ProductItem> productList;
     private AdminProductAdapter adapter;
     private TextView productCountText;
+    private List<Object> selectedImages = new ArrayList<>();
+    private LinearLayout imagePreviewContainer;
+
+    private final ActivityResultLauncher<Intent> galleryLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                    Uri imageUri = result.getData().getData();
+                    if (imageUri != null) {
+                        addImageToPreview(imageUri);
+                    }
+                }
+            }
+    );
+
+    private final ActivityResultLauncher<Intent> cameraLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                    Bitmap photo = (Bitmap) result.getData().getExtras().get("data");
+                    if (photo != null) {
+                        addImageToPreview(photo);
+                    }
+                }
+            }
+    );
 
     @Nullable
     @Override
@@ -39,7 +74,6 @@ public class AdminDeskFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.adminProductRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         
-        // Use central repository so changes affect the whole app
         productList = ProductRepository.getInstance().getAllProducts();
         updateCount();
         
@@ -58,37 +92,58 @@ public class AdminDeskFragment extends Fragment {
     }
 
     private void showAddProductDialog() {
+        selectedImages.clear();
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_product, null);
         AlertDialog dialog = new AlertDialog.Builder(getContext(), android.R.style.Theme_DeviceDefault_NoActionBar_Fullscreen).setView(dialogView).create();
 
         TextInputEditText etName = dialogView.findViewById(R.id.etProductName);
         TextInputEditText etPrice = dialogView.findViewById(R.id.etProductPrice);
         TextInputEditText etCategory = dialogView.findViewById(R.id.etProductCategory);
+        imagePreviewContainer = dialogView.findViewById(R.id.imagePreviewContainer);
+        MaterialButton btnGallery = dialogView.findViewById(R.id.btnGallery);
+        MaterialButton btnCamera = dialogView.findViewById(R.id.btnCamera);
         MaterialButton btnSave = dialogView.findViewById(R.id.btnSaveProduct);
 
-        btnSave.setOnClickListener(v -> {
-            Editable nameEditable = etName.getText();
-            Editable priceEditable = etPrice.getText();
-            Editable categoryEditable = etCategory.getText();
+        btnGallery.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            galleryLauncher.launch(intent);
+        });
 
-            String name = nameEditable != null ? nameEditable.toString().trim() : "";
-            String price = priceEditable != null ? priceEditable.toString().trim() : "";
-            String category = categoryEditable != null ? categoryEditable.toString().trim() : "";
+        btnCamera.setOnClickListener(v -> {
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            cameraLauncher.launch(intent);
+        });
+
+        btnSave.setOnClickListener(v -> {
+            Editable nameEdit = etName.getText();
+            Editable priceEdit = etPrice.getText();
+            Editable catEdit = etCategory.getText();
+
+            String name = (nameEdit != null) ? nameEdit.toString().trim() : "";
+            String price = (priceEdit != null) ? priceEdit.toString().trim() : "";
+            String category = (catEdit != null) ? catEdit.toString().trim() : "";
 
             if (!name.isEmpty() && !price.isEmpty() && !category.isEmpty()) {
-                // Default colors for manually added products
-                int[] defaultColors = {Color.BLACK, Color.GRAY};
-                String[] defaultColorNames = {"Black", "Grey"};
+                Object mainImage = selectedImages.isEmpty() ? R.drawable.ic_clothing_placeholder : selectedImages.get(0);
                 
+                // Default colors for manually added products
+                int[] defaultColors = {Color.BLACK, Color.GRAY, Color.WHITE, Color.BLUE};
+                String[] defaultColorNames = {"Black", "Grey", "White", "Blue"};
+                
+                // FIXED: Use the correct 7-argument constructor
                 ProductRepository.ProductItem newItem = new ProductRepository.ProductItem(
-                        name, 
-                        price, 
-                        category, 
-                        R.drawable.ic_clothing_placeholder, 
-                        true,
-                        defaultColors,
-                        defaultColorNames
+                        name, price, category, mainImage, true, defaultColors, defaultColorNames
                 );
+                
+                // Add all selected images to the gallery
+                if (!selectedImages.isEmpty()) {
+                    newItem.allImages.clear();
+                    newItem.allImages.addAll(selectedImages);
+                    // Map first few images to default colors
+                    for (int i = 0; i < selectedImages.size() && i < defaultColorNames.length; i++) {
+                        newItem.colorImageMap.put(defaultColorNames[i], selectedImages.get(i));
+                    }
+                }
                 
                 ProductRepository.getInstance().getAllProducts().add(0, newItem);
                 adapter.notifyItemInserted(0);
@@ -101,6 +156,20 @@ public class AdminDeskFragment extends Fragment {
         });
 
         dialog.show();
+    }
+
+    private void addImageToPreview(Object image) {
+        selectedImages.add(image);
+        if (imagePreviewContainer != null) {
+            ImageView iv = new ImageView(getContext());
+            int size = (int) (80 * getResources().getDisplayMetrics().density);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(size, size);
+            lp.setMargins(0, 0, (int) (8 * getResources().getDisplayMetrics().density), 0);
+            iv.setLayoutParams(lp);
+            iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            Glide.with(this).load(image).into(iv);
+            imagePreviewContainer.addView(iv);
+        }
     }
 
     class AdminProductAdapter extends RecyclerView.Adapter<AdminProductAdapter.ViewHolder> {
@@ -136,6 +205,11 @@ public class AdminDeskFragment extends Fragment {
 
             holder.stockSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 p.inStock = isChecked;
+                if (p.colorStockMap != null) {
+                    for (String color : p.colorNames) {
+                        p.colorStockMap.put(color, isChecked);
+                    }
+                }
                 holder.stockStatus.setText(isChecked ? "IN STOCK" : "OUT OF STOCK");
                 holder.stockStatus.setTextColor(isChecked ? 0xFFCCFF00 : 0xFFFF4444);
                 Toast.makeText(getContext(), p.name + " is now " + (isChecked ? "In Stock" : "Out of Stock"), Toast.LENGTH_SHORT).show();

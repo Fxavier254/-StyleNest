@@ -76,13 +76,25 @@ public class ProductListFragment extends Fragment {
                  .centerInside()
                  .into(img);
 
-            // Use live stock status from repository
             if (overlay != null) {
                 overlay.setVisibility(product.inStock ? View.GONE : View.VISIBLE);
             }
 
+            // Quick toggle stock status for Admin via long press
+            productView.setOnLongClickListener(v -> {
+                product.inStock = !product.inStock;
+                if (overlay != null) {
+                    overlay.setVisibility(product.inStock ? View.GONE : View.VISIBLE);
+                }
+                String status = product.inStock ? "In Stock" : "Out of Stock";
+                Toast.makeText(getContext(), product.name + " is now " + status, Toast.LENGTH_SHORT).show();
+                return true;
+            });
+
             productView.setOnClickListener(v -> {
-                // We open the detail screen regardless of stock status so the user can see it's "Out of Stock" there
+                if (!product.inStock) {
+                    Toast.makeText(getActivity(), product.name + " is currently out of stock", Toast.LENGTH_SHORT).show();
+                }
                 Intent intent = new Intent(getActivity(), ProductDetailActivity.class);
                 intent.putExtra("product_name", product.name);
                 intent.putExtra("product_price", product.price);

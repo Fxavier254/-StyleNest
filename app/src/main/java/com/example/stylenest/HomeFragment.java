@@ -22,18 +22,23 @@ public class HomeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
         GridLayout mensGrid = view.findViewById(R.id.mensGrid);
+        GridLayout shoesGrid = view.findViewById(R.id.shoesGrid);
         GridLayout womensGrid = view.findViewById(R.id.womensGrid);
         GridLayout essentialsGrid = view.findViewById(R.id.essentialsGrid);
 
         // Fetch products from central repository
-        populateCategory(mensGrid, inflater, "MEN'S STORE", 6);
+        populateCategory(mensGrid, inflater, "MEN'S STORE", 4);
+        populateCategory(shoesGrid, inflater, "SHOES", 4);
         populateCategory(womensGrid, inflater, "WOMEN'S STORE", 4);
-        populateCategory(essentialsGrid, inflater, "ACCESSORIES", 6);
+        populateCategory(essentialsGrid, inflater, "ACCESSORIES", 4);
 
         return view;
     }
 
     private void populateCategory(GridLayout grid, LayoutInflater inflater, String category, int limit) {
+        if (grid == null) return;
+        grid.removeAllViews();
+        
         List<ProductRepository.ProductItem> products = ProductRepository.getInstance().getProductsByCategory(category);
         int placeholderRes = category.contains("WOMEN") ? R.drawable.ic_dress_placeholder : 
                            category.contains("SHOES") ? R.drawable.ic_shoe_placeholder : R.drawable.ic_clothing_placeholder;
@@ -57,28 +62,27 @@ public class HomeFragment extends Fragment {
                  .centerInside()
                  .into(img);
 
-            // Directly using the Admin Desk status
             if (overlay != null) {
                 overlay.setVisibility(product.inStock ? View.GONE : View.VISIBLE);
             }
 
-            productView.setOnClickListener(v -> {
-                if (!product.inStock) {
-                    Toast.makeText(getActivity(), product.name + " is out of stock (Controlled by Admin)", Toast.LENGTH_SHORT).show();
-                    return; 
+            // Long press to toggle stock (Admin feature)
+            productView.setOnLongClickListener(v -> {
+                product.inStock = !product.inStock;
+                if (overlay != null) {
+                    overlay.setVisibility(product.inStock ? View.GONE : View.VISIBLE);
                 }
+                String status = product.inStock ? "In Stock" : "Out of Stock";
+                Toast.makeText(getContext(), product.name + " is now " + status, Toast.LENGTH_SHORT).show();
+                return true;
+            });
+
+            productView.setOnClickListener(v -> {
+                // If out of stock, we still allow viewing but purchase is blocked inside Detail activity
                 Intent intent = new Intent(getActivity(), ProductDetailActivity.class);
                 intent.putExtra("product_name", product.name);
                 intent.putExtra("product_price", product.price);
-                intent.putExtra("product_in_stock", product.inStock);
                 intent.putExtra("product_category", product.category);
-                
-                if (product.imageSource instanceof String) {
-                    intent.putExtra("product_url", (String) product.imageSource);
-                } else if (product.imageSource instanceof Integer) {
-                    intent.putExtra("product_image_res", (Integer) product.imageSource);
-                }
-                
                 intent.putExtra("product_placeholder", placeholderRes);
                 startActivity(intent);
             });

@@ -34,20 +34,54 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <ImageView
-                android:id="@+id/detailProductImage"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="400dp"
-                android:background="@color/dark_grey"
-                android:padding="16dp"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_clothing_placeholder" />
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/detailProductImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="400dp"
+                    android:background="@color/dark_grey"
+                    android:padding="16dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_clothing_placeholder" />
+
+                <TextView
+                    android:id="@+id/stockStatusDetail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="16dp"
+                    android:background="#99000000"
+                    android:padding="8dp"
+                    android:text="IN STOCK"
+                    android:textColor="@color/neon_lime"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
+            <!-- MULTIPLE IMAGES THUMBNAILS -->
+            <HorizontalScrollView
+                android:id="@+id/imageGalleryScroll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:scrollbars="none">
+                <LinearLayout
+                    android:id="@+id/imageGalleryContainer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <!-- Thumbnails added programmatically -->
+                </LinearLayout>
+            </HorizontalScrollView>
 
             <TextView
                 android:id="@+id/detailProductName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="16dp"
                 android:text="Product Name"
                 android:textColor="@color/white"
                 android:textSize="24sp"
@@ -65,17 +99,6 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/stockStatusDetail"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="IN STOCK"
-                android:textColor="@color/neon_lime"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
-
-            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
@@ -89,7 +112,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Premium quality fashion essential. Part of the exclusive StyleNest collection, designed for style and comfort in the streets of Nairobi."
+                android:text="Premium quality fashion essential. Part of the exclusive StyleNest collection, designed for style and comfort."
                 android:textColor="@color/text_grey"
                 android:textSize="14sp"
                 android:lineSpacingExtra="4dp" />
@@ -206,43 +229,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:orientation="horizontal">
-
-                <View
-                    android:id="@+id/color1"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="16dp"
-                    android:background="@android:color/black"
-                    android:clickable="true"
-                    android:focusable="true" />
-
-                <View
-                    android:id="@+id/color2"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="16dp"
-                    android:background="@android:color/darker_gray"
-                    android:clickable="true"
-                    android:focusable="true" />
-
-                <View
-                    android:id="@+id/color3"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="16dp"
-                    android:background="#1A237E"
-                    android:clickable="true"
-                    android:focusable="true" />
-
-                <View
-                    android:id="@+id/color4"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="16dp"
-                    android:background="#B71C1C"
-                    android:clickable="true"
-                    android:focusable="true" />
-
+                <!-- Programmatically populated -->
             </LinearLayout>
 
         </LinearLayout>
