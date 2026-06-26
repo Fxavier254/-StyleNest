@@ -20,6 +20,15 @@
             android:textStyle="bold"
             android:letterSpacing="0.1" />
 
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:visibility="gone"
+            android:indeterminate="true" />
+
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
@@ -29,7 +38,6 @@
             app:hintTextColor="@color/white"
             app:boxStrokeColor="@color/white"
             app:boxBackgroundColor="@color/dark_grey">
-
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etProductName"
                 android:layout_width="match_parent"
@@ -47,7 +55,6 @@
             app:hintTextColor="@color/white"
             app:boxStrokeColor="@color/white"
             app:boxBackgroundColor="@color/dark_grey">
-
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etProductPrice"
                 android:layout_width="match_parent"
@@ -65,12 +72,30 @@
             app:hintTextColor="@color/white"
             app:boxStrokeColor="@color/white"
             app:boxBackgroundColor="@color/dark_grey">
-
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etProductCategory"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Category (e.g. HOODIES)"
+                android:hint="Category (e.g. SHOES)"
+                android:textColor="@color/white" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textColorHint="@color/text_grey"
+            app:hintTextColor="@color/white"
+            app:boxStrokeColor="@color/white"
+            app:boxBackgroundColor="@color/dark_grey">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etProductDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Description"
+                android:lines="3"
+                android:gravity="top"
                 android:textColor="@color/white" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -88,14 +113,11 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:scrollbars="none">
-
             <LinearLayout
                 android:id="@+id/imagePreviewContainer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <!-- Selected images will be added here -->
-            </LinearLayout>
+                android:orientation="horizontal" />
         </HorizontalScrollView>
 
         <LinearLayout
@@ -103,7 +125,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:orientation="horizontal">
-
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnGallery"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
@@ -114,7 +135,6 @@
                 android:text="GALLERY"
                 android:textColor="@color/white"
                 app:strokeColor="@color/white" />
-
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCamera"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"

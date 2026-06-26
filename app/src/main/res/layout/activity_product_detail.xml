@@ -61,7 +61,6 @@
                     android:textStyle="bold" />
             </FrameLayout>
 
-            <!-- MULTIPLE IMAGES THUMBNAILS -->
             <HorizontalScrollView
                 android:id="@+id/imageGalleryScroll"
                 android:layout_width="match_parent"
@@ -73,7 +72,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
-                    <!-- Thumbnails added programmatically -->
                 </LinearLayout>
             </HorizontalScrollView>
 
@@ -109,15 +107,15 @@
                 android:letterSpacing="0.1" />
 
             <TextView
+                android:id="@+id/detailProductDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Premium quality fashion essential. Part of the exclusive StyleNest collection, designed for style and comfort."
+                android:text="Premium quality fashion essential."
                 android:textColor="@color/text_grey"
                 android:textSize="14sp"
                 android:lineSpacingExtra="4dp" />
 
-            <!-- SIZE SELECTION -->
             <TextView
                 android:id="@+id/tvSizeLabel"
                 android:layout_width="wrap_content"
@@ -211,7 +209,6 @@
                 </LinearLayout>
             </HorizontalScrollView>
 
-            <!-- COLOR SELECTION -->
             <TextView
                 android:id="@+id/tvColorLabel"
                 android:layout_width="wrap_content"
@@ -229,7 +226,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:orientation="horizontal">
-                <!-- Programmatically populated -->
             </LinearLayout>
 
         </LinearLayout>

@@ -40,23 +40,30 @@ public class ProductListFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_product_list, container, false);
         
         TextView title = view.findViewById(R.id.categoryTitle);
-        title.setText(categoryName);
+        if (title != null) {
+            title.setText(categoryName);
+        }
 
         ImageView backButton = view.findViewById(R.id.backButton);
-        backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
+        if (backButton != null) {
+            backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
+        }
 
         GridLayout grid = view.findViewById(R.id.productGrid);
-        populateProducts(grid, inflater);
+        if (grid != null) {
+            populateProducts(grid, inflater);
+        }
 
         return view;
     }
 
     private void populateProducts(GridLayout grid, LayoutInflater inflater) {
+        grid.removeAllViews();
         List<ProductRepository.ProductItem> products = ProductRepository.getInstance().getProductsByCategory(categoryName);
-        int placeholderRes = categoryName.contains("WOMEN") ? R.drawable.ic_dress_placeholder : 
-                           categoryName.contains("SHOES") ? R.drawable.ic_shoe_placeholder : R.drawable.ic_clothing_placeholder;
-
+        
         if (products.isEmpty()) {
+            View emptyView = inflater.inflate(R.layout.layout_empty_products, grid, false);
+            grid.addView(emptyView);
             return;
         }
 
@@ -70,45 +77,50 @@ public class ProductListFragment extends Fragment {
             name.setText(product.name);
             price.setText(product.price);
 
+            // Dynamic placeholder logic based on product name/type (Image-to-name validation)
+            final int itemPlaceholder;
+            String lowerName = product.name.toLowerCase();
+            if (lowerName.contains("shoe") || lowerName.contains("sneaker") || lowerName.contains("boot") || 
+                lowerName.contains("velcro") || lowerName.contains("runner") || lowerName.contains("trainer") || 
+                lowerName.contains("oxford") || lowerName.contains("stiletto") || lowerName.contains("heel") || lowerName.contains("loafer")) {
+                itemPlaceholder = R.drawable.ic_shoe_placeholder;
+            } else if (lowerName.contains("dress") || lowerName.contains("skirt") || lowerName.contains("tutu")) {
+                itemPlaceholder = R.drawable.ic_dress_placeholder;
+            } else {
+                itemPlaceholder = R.drawable.ic_clothing_placeholder;
+            }
+
+            // Using fitCenter() to ensure images are fully visible and not cropped, meeting professional requirements
             Glide.with(this)
                  .load(product.imageSource)
-                 .placeholder(placeholderRes)
-                 .centerInside()
+                 .placeholder(itemPlaceholder)
+                 .error(itemPlaceholder)
+                 .fitCenter()
                  .into(img);
 
             if (overlay != null) {
                 overlay.setVisibility(product.inStock ? View.GONE : View.VISIBLE);
             }
 
-            // Quick toggle stock status for Admin via long press
+            productView.setOnClickListener(v -> {
+                Intent intent = new Intent(getActivity(), ProductDetailActivity.class);
+                intent.putExtra("product_name", product.name);
+                intent.putExtra("product_price", product.price);
+                intent.putExtra("product_category", product.category);
+                intent.putExtra("is_in_stock", product.inStock);
+                intent.putExtra("product_placeholder", itemPlaceholder);
+                startActivity(intent);
+            });
+
+            // Admin toggle for stock status
             productView.setOnLongClickListener(v -> {
                 product.inStock = !product.inStock;
                 if (overlay != null) {
                     overlay.setVisibility(product.inStock ? View.GONE : View.VISIBLE);
                 }
-                String status = product.inStock ? "In Stock" : "Out of Stock";
+                String status = product.inStock ? "AVAILABLE" : "OUT OF STOCK";
                 Toast.makeText(getContext(), product.name + " is now " + status, Toast.LENGTH_SHORT).show();
                 return true;
-            });
-
-            productView.setOnClickListener(v -> {
-                if (!product.inStock) {
-                    Toast.makeText(getActivity(), product.name + " is currently out of stock", Toast.LENGTH_SHORT).show();
-                }
-                Intent intent = new Intent(getActivity(), ProductDetailActivity.class);
-                intent.putExtra("product_name", product.name);
-                intent.putExtra("product_price", product.price);
-                intent.putExtra("product_category", product.category);
-                intent.putExtra("product_in_stock", product.inStock);
-                
-                if (product.imageSource instanceof String) {
-                    intent.putExtra("product_url", (String) product.imageSource);
-                } else if (product.imageSource instanceof Integer) {
-                    intent.putExtra("product_image_res", (Integer) product.imageSource);
-                }
-                
-                intent.putExtra("product_placeholder", placeholderRes);
-                startActivity(intent);
             });
 
             grid.addView(productView);

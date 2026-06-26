@@ -21,12 +21,21 @@
             android:src="@drawable/ic_back"
             app:tint="@color/white" />
 
+        <ImageView
+            android:id="@+id/adminLogoIcon"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="12dp"
+            android:layout_toRightOf="@id/backButton"
+            android:src="@drawable/ic_stylenest_logo" />
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:layout_toRightOf="@id/backButton"
-            android:layout_marginLeft="16dp"
+            android:layout_toRightOf="@id/adminLogoIcon"
+            android:layout_marginLeft="10dp"
             android:orientation="vertical">
 
             <TextView
@@ -35,14 +44,15 @@
                 android:text="ADMIN DESK"
                 android:textColor="@color/white"
                 android:textStyle="bold"
-                android:textSize="20sp" />
+                android:textSize="18sp"
+                android:letterSpacing="0.05" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="PRODUCT MANAGEMENT"
                 android:textColor="@color/text_grey"
-                android:textSize="12sp"
+                android:textSize="10sp"
                 android:letterSpacing="0.05" />
         </LinearLayout>
 
@@ -52,9 +62,9 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:text="+ ADD PRODUCT"
+            android:text="+ ADD"
             android:textColor="@color/black"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:textStyle="bold"
             app:backgroundTint="@color/neon_lime"
             app:cornerRadius="4dp" />

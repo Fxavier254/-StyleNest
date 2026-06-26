@@ -41,6 +41,7 @@ dependencies {
     // Glide for loading real pictures
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation(libs.firebase.firestore)
+    implementation("com.google.firebase:firebase-storage:21.0.1")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 
     testImplementation(libs.junit)

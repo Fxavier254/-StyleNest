@@ -1,8 +1,10 @@
 package com.example.stylenest;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
@@ -14,29 +16,51 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 public class AdminDeskFragment extends Fragment {
 
     private List<ProductRepository.ProductItem> productList;
     private AdminProductAdapter adapter;
     private TextView productCountText;
-    private List<Object> selectedImages = new ArrayList<>();
+    private final List<Object> selectedImages = new ArrayList<>();
+    private final List<String> uploadedImageUrls = new ArrayList<>();
     private LinearLayout imagePreviewContainer;
+    private ProgressBar progressBar;
+
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    openCamera();
+                } else {
+                    Toast.makeText(getContext(), "Camera permission denied", Toast.LENGTH_SHORT).show();
+                }
+            });
 
     private final ActivityResultLauncher<Intent> galleryLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -53,7 +77,7 @@ public class AdminDeskFragment extends Fragment {
     private final ActivityResultLauncher<Intent> cameraLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
-                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null && result.getData().getExtras() != null) {
                     Bitmap photo = (Bitmap) result.getData().getExtras().get("data");
                     if (photo != null) {
                         addImageToPreview(photo);
@@ -93,13 +117,16 @@ public class AdminDeskFragment extends Fragment {
 
     private void showAddProductDialog() {
         selectedImages.clear();
+        uploadedImageUrls.clear();
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_product, null);
         AlertDialog dialog = new AlertDialog.Builder(getContext(), android.R.style.Theme_DeviceDefault_NoActionBar_Fullscreen).setView(dialogView).create();
 
         TextInputEditText etName = dialogView.findViewById(R.id.etProductName);
         TextInputEditText etPrice = dialogView.findViewById(R.id.etProductPrice);
         TextInputEditText etCategory = dialogView.findViewById(R.id.etProductCategory);
+        TextInputEditText etDesc = dialogView.findViewById(R.id.etProductDescription);
         imagePreviewContainer = dialogView.findViewById(R.id.imagePreviewContainer);
+        progressBar = dialogView.findViewById(R.id.progressBar);
         MaterialButton btnGallery = dialogView.findViewById(R.id.btnGallery);
         MaterialButton btnCamera = dialogView.findViewById(R.id.btnCamera);
         MaterialButton btnSave = dialogView.findViewById(R.id.btnSaveProduct);
@@ -110,52 +137,114 @@ public class AdminDeskFragment extends Fragment {
         });
 
         btnCamera.setOnClickListener(v -> {
-            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            cameraLauncher.launch(intent);
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                openCamera();
+            } else {
+                requestPermissionLauncher.launch(Manifest.permission.CAMERA);
+            }
         });
 
         btnSave.setOnClickListener(v -> {
             Editable nameEdit = etName.getText();
             Editable priceEdit = etPrice.getText();
             Editable catEdit = etCategory.getText();
+            Editable descEdit = etDesc.getText();
 
             String name = (nameEdit != null) ? nameEdit.toString().trim() : "";
             String price = (priceEdit != null) ? priceEdit.toString().trim() : "";
             String category = (catEdit != null) ? catEdit.toString().trim() : "";
+            String description = (descEdit != null) ? descEdit.toString().trim() : "";
 
             if (!name.isEmpty() && !price.isEmpty() && !category.isEmpty()) {
-                Object mainImage = selectedImages.isEmpty() ? R.drawable.ic_clothing_placeholder : selectedImages.get(0);
-                
-                // Default colors for manually added products
-                int[] defaultColors = {Color.BLACK, Color.GRAY, Color.WHITE, Color.BLUE};
-                String[] defaultColorNames = {"Black", "Grey", "White", "Blue"};
-                
-                // FIXED: Use the correct 7-argument constructor
-                ProductRepository.ProductItem newItem = new ProductRepository.ProductItem(
-                        name, price, category, mainImage, true, defaultColors, defaultColorNames
-                );
-                
-                // Add all selected images to the gallery
-                if (!selectedImages.isEmpty()) {
-                    newItem.allImages.clear();
-                    newItem.allImages.addAll(selectedImages);
-                    // Map first few images to default colors
-                    for (int i = 0; i < selectedImages.size() && i < defaultColorNames.length; i++) {
-                        newItem.colorImageMap.put(defaultColorNames[i], selectedImages.get(i));
-                    }
+                if (selectedImages.isEmpty()) {
+                    Toast.makeText(getContext(), "Please select at least one image", Toast.LENGTH_SHORT).show();
+                    return;
                 }
                 
-                ProductRepository.getInstance().getAllProducts().add(0, newItem);
-                adapter.notifyItemInserted(0);
-                updateCount();
-                dialog.dismiss();
-                Toast.makeText(getContext(), "Product Added", Toast.LENGTH_SHORT).show();
+                uploadImagesAndSave(name, price, category, description, dialog);
             } else {
                 Toast.makeText(getContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
             }
         });
 
         dialog.show();
+    }
+
+    private void openCamera() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        cameraLauncher.launch(intent);
+    }
+
+    private void uploadImagesAndSave(String name, String price, String category, String description, AlertDialog dialog) {
+        if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
+        uploadedImageUrls.clear();
+        uploadNextImage(0, name, price, category, description, dialog);
+    }
+
+    private void uploadNextImage(int index, String name, String price, String category, String description, AlertDialog dialog) {
+        if (index >= selectedImages.size()) {
+            saveProductToFirestore(name, price, category, description, dialog);
+            return;
+        }
+
+        Object image = selectedImages.get(index);
+        StorageReference ref = FirebaseStorage.getInstance().getReference().child("product_images/" + UUID.randomUUID().toString());
+        UploadTask uploadTask;
+
+        if (image instanceof Uri) {
+            uploadTask = ref.putFile((Uri) image);
+        } else {
+            Bitmap bitmap = (Bitmap) image;
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            byte[] data = baos.toByteArray();
+            uploadTask = ref.putBytes(data);
+        }
+
+        uploadTask.continueWithTask(task -> {
+            if (!task.isSuccessful()) {
+                throw Objects.requireNonNull(task.getException());
+            }
+            return ref.getDownloadUrl();
+        }).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                uploadedImageUrls.add(Objects.requireNonNull(task.getResult()).toString());
+                uploadNextImage(index + 1, name, price, category, description, dialog);
+            } else {
+                if (progressBar != null) progressBar.setVisibility(View.GONE);
+                Toast.makeText(getContext(), "Image upload failed", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void saveProductToFirestore(String name, String price, String category, String description, AlertDialog dialog) {
+        Object mainImage = uploadedImageUrls.isEmpty() ? R.drawable.ic_clothing_placeholder : uploadedImageUrls.get(0);
+        
+        int[] defaultColors = {Color.BLACK, Color.GRAY, Color.WHITE, Color.BLUE};
+        String[] defaultColorNames = {"Black", "Grey", "White", "Blue"};
+        
+        ProductRepository.ProductItem newItem = new ProductRepository.ProductItem(
+                name, price, category, mainImage, true, defaultColors, defaultColorNames, description
+        );
+        
+        if (!uploadedImageUrls.isEmpty()) {
+            newItem.allImages.clear();
+            newItem.allImages.addAll(uploadedImageUrls);
+            for (int i = 0; i < uploadedImageUrls.size() && i < defaultColorNames.length; i++) {
+                newItem.colorImageMap.put(defaultColorNames[i], uploadedImageUrls.get(i));
+            }
+        }
+        
+        ProductRepository.getInstance().addProductToFirestore(newItem, () -> {
+            if (progressBar != null) progressBar.setVisibility(View.GONE);
+            dialog.dismiss();
+            Toast.makeText(getContext(), "Product Saved Successfully", Toast.LENGTH_SHORT).show();
+            updateCount();
+            adapter.notifyItemInserted(0);
+        }, () -> {
+            if (progressBar != null) progressBar.setVisibility(View.GONE);
+            Toast.makeText(getContext(), "Failed to save product", Toast.LENGTH_SHORT).show();
+        });
     }
 
     private void addImageToPreview(Object image) {
@@ -205,14 +294,16 @@ public class AdminDeskFragment extends Fragment {
 
             holder.stockSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 p.inStock = isChecked;
-                if (p.colorStockMap != null) {
+                if (p.colorStockMap != null && p.colorNames != null) {
                     for (String color : p.colorNames) {
                         p.colorStockMap.put(color, isChecked);
                     }
                 }
                 holder.stockStatus.setText(isChecked ? "IN STOCK" : "OUT OF STOCK");
                 holder.stockStatus.setTextColor(isChecked ? 0xFFCCFF00 : 0xFFFF4444);
-                Toast.makeText(getContext(), p.name + " is now " + (isChecked ? "In Stock" : "Out of Stock"), Toast.LENGTH_SHORT).show();
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), p.name + " is now " + (isChecked ? "In Stock" : "Out of Stock"), Toast.LENGTH_SHORT).show();
+                }
             });
         }
 

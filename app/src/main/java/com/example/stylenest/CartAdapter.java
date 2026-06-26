@@ -39,10 +39,12 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         holder.size.setText("Size: " + product.size);
         holder.color.setText("Color: " + product.color);
         
+        // Professional Touch: Using centerCrop for uniform cart item appearance
         Glide.with(holder.itemView.getContext())
              .load(product.imageSource)
              .placeholder(product.placeholderRes)
-             .centerInside()
+             .error(product.placeholderRes)
+             .centerCrop()
              .into(holder.image);
 
         holder.removeBtn.setOnClickListener(v -> {
